@@ -1,0 +1,12 @@
+# Environment variables (contains sensitive tokens)
+.env
+
+# vllm HuggingFace model cache
+hf_cache/
+
+# Ollama model storage
+ollama_models/
+ollama-data/
+
+# OpenWebUI data
+openwebui_data/
