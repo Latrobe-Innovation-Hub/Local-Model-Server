@@ -1,0 +1,146 @@
+services:
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ollama
+  #   restart: unless-stopped
+  #   runtime: nvidia
+  #   ports:
+  #     - "11434:11434"
+  #   environment:
+  #     - OLLAMA_MODELS=/root/.ollama
+  #     - GGML_CUDA_ENABLE_UNIFIED_MEMORY=1
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #     - NVIDIA_DRIVER_CAPABILITIES=all
+  #     - OLLAMA_KEEP_ALIVE=30m
+  #     - OLLAMA_FLASH_ATTENTION=1
+  #     - OLLAMA_NUM_PARALLEL=2
+  #   volumes:
+  #     - ./ollama_models:/root/.ollama
+  #     - ./ollama-data:/root/.ollama/data
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 8
+  #             capabilities: [gpu]
+
+  vllm:
+    #image: vllm/vllm-openai:nightly
+    image: vllm/vllm-openai:latest
+    #image: vllm/vllm-openai:glm51-cu130
+    container_name: vllm
+    restart: unless-stopped
+    runtime: nvidia
+    ipc: host
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      #- SAFETENSORS_FAST_GPU=1 # MiniMax
+      #- VLLM_USE_DEEP_GEMM=0 # GLM
+    volumes:
+      - ./hf_cache:/root/.cache/huggingface
+
+    # command: >
+    #  deepseek-ai/DeepSeek-V4-Flash
+    #   --host 0.0.0.0
+    #   --port 8000
+    #   --gpu-memory-utilization 0.95
+    #   --kv-cache-dtype fp8
+    #   --served-model-name qwen35-397b-a17b
+    #   --max-model-len 1024000
+    #   --tensor-parallel-size 8
+    #   --reasoning-parser deepseek_v4
+    #   --tool-call-parser deepseek_v4
+    #   --tokenizer-mode deepseek_v4
+    #   --enable-auto-tool-choice
+    #   --enable-expert-parallel
+    #   --enable-prefix-caching
+
+    # command: >
+    #   Qwen/Qwen3.5-397B-A17B-FP8
+    #   --host 0.0.0.0
+    #   --port 8000
+    #   --cpu-offload-gb 15
+    #   --gpu-memory-utilization 0.95
+    #   --served-model-name qwen35-397b-a17b
+    #   --max-model-len 262144
+    #   --tensor-parallel-size 8
+    #   --max_num_batched_tokens 4096
+    #   --reasoning-parser qwen3
+    #   --tool-call-parser qwen3_coder
+    #   --enable-auto-tool-choice
+    #   --enable-expert-parallel
+    #   --enable-prefix-caching
+    #   --mm-encoder-tp-mode data
+    #   --mm-processor-cache-type shm
+
+    command: >
+      nvidia/Qwen3.5-397B-A17B-NVFP4
+      --host 0.0.0.0
+      --port 8000
+      --gpu-memory-utilization 0.95
+      --served-model-name qwen35
+      --max-model-len 262144
+      --tensor-parallel-size 8
+      --max_num_batched_tokens 4096
+      --reasoning-parser qwen3
+      --tool-call-parser qwen3_coder
+      --enable-auto-tool-choice
+      --enable-expert-parallel
+      --enable-prefix-caching
+      --mm-encoder-tp-mode data
+      --mm-processor-cache-type shm
+
+    # command: >
+    #   MiniMaxAI/MiniMax-M2.7
+    #   --trust-remote-code
+    #   --host 0.0.0.0
+    #   --port 8000
+    #   --served-model-name minimax_m27
+    #   --max-model-len 204800
+    #   --tensor-parallel-size 8
+    #   --reasoning-parser minimax_m2
+    #   --tool-call-parser minimax_m2
+    #   --enable-auto-tool-choice
+    #   --enable-expert-parallel
+
+    # command: >
+    #   lukealonso/GLM-5.1-NVFP4
+    #   --host 0.0.0.0
+    #   --port 8000
+    #   --served-model-name glm51
+    #   --cpu-offload-gb 15
+    #   --max-model-len 202752
+    #   --tensor-parallel-size 8
+    #   --reasoning-parser glm45
+    #   --tool-call-parser glm47
+    #   --enable-auto-tool-choice
+    #   --enable-expert-parallel
+    #   --enable-prefix-caching
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 8
+              capabilities: [gpu]
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OPENAI_API_BASE_URL=http://vllm:8000/v1
+      - WEBUI_SECRET_KEY=
+    volumes:
+      - ./openwebui_data:/app/backend/data
