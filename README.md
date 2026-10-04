@@ -144,8 +144,8 @@ When Ollama is enabled, models can be downloaded directly from the OpenWebUI int
 1. Open http://localhost:3000
 2. Go to Admin Panel > Settings > Models (older versions: Settings (gear icon) > Models)
 3. Click "Pull a model"
-5. Enter the model name (e.g., `llama3.2`, `mistral`, `gemma2`)
-6. Click Pull
+4. Enter the model name (e.g., `qwen3.5:122b`, `gpt-oss:120b`, `llama3.2`)
+5. Click Pull
 
 ### Recommended Ollama Models for This Hardware
 
