@@ -142,11 +142,41 @@ To download models from the Ollama library, vllm must be disabled:
 When Ollama is enabled, models can be downloaded directly from the OpenWebUI interface:
 
 1. Open http://localhost:3000
-2. Go to Settings (gear icon)
-3. Navigate to Models
-4. Click "Pull a model"
+2. Go to Admin Panel > Settings > Models (older versions: Settings (gear icon) > Models)
+3. Click "Pull a model"
 5. Enter the model name (e.g., `llama3.2`, `mistral`, `gemma2`)
 6. Click Pull
+
+### Recommended Ollama Models for This Hardware
+
+With 368GB of VRAM across 8x L40S, these are the largest strong models that run locally in Ollama. Both fit in GPU memory at the same time.
+
+| Model | Size (Q4) | Notes |
+|-------|-----------|-------|
+| `qwen3.5:122b` | ~81GB | Largest Qwen3.5 in the Ollama library; text and image input, 256K context |
+| `gpt-oss:120b` | ~65GB | OpenAI open-weights model, 128K context |
+
+The vllm default (`Qwen3.5-397B-A17B`) is larger, but Qwen3.5 GGUF files don't currently run in Ollama (separate vision projector files), and the Ollama library offers the 397B model as a cloud tag only. Use vllm for the 397B model.
+
+Pull from the command line (faster to monitor than the web UI):
+
+```bash
+docker compose exec ollama ollama pull qwen3.5:122b
+docker compose exec ollama ollama pull gpt-oss:120b
+docker compose exec ollama ollama list
+```
+
+### Settings for a Workshop (several users at once)
+
+In the `ollama` service environment:
+
+```yaml
+- OLLAMA_NUM_PARALLEL=4        # requests served at once per model
+- OLLAMA_MAX_LOADED_MODELS=2   # keep both models in GPU memory
+- OLLAMA_KEEP_ALIVE=4h         # stop models unloading between sessions
+```
+
+Create workshop logins in OpenWebUI under **Admin Panel > Users > Add User**, and turn off new sign-ups under **Admin Panel > Settings** while the workshop runs. Remove the accounts afterwards.
 
 ### Switch Back to vllm
 
